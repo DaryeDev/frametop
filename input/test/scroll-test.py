@@ -126,13 +126,13 @@ check("and forgets the push", p.scroll_until, None)
 # ---------------------------------------------------------------- on a Frametop panel
 p = pointer()
 taken = []
-p.wheel_to = lambda n: taken.append(n) or True  # ft-screens said the laser is on a panel
+p.wheel_to = lambda n, horizontal=False: taken.append(n) or True  # ft-screens said the laser is on a panel
 for i in range(40):
     p.motion(relay.REL_WHEEL, -1, 10.0 + i * 0.02)
 check("on a panel, every notch goes to ft-screens", (len(taken), sum(taken)), (40, -40))
 check("and the joystick stays still", scrolls(p), [])
-p.wheel_to = lambda n: False  # off the panels again
-p.motion(relay.REL_WHEEL, 1, 11.0)
+p.wheel_to = lambda n, horizontal=False: False  # off the panels again
+p.motion(relay.REL_WHEEL, 1, 12.0)
 check("off the panels, the joystick again", scrolls(p), ["scroll 0 1"])
 
 # ---------------------------------------------------------------- the horizontal wheel
@@ -145,7 +145,12 @@ check("on a panel, the horizontal wheel goes to ft-screens as such", taken, [(1,
 check("and never moves the joystick", scrolls(p), [])
 p.wheel_to = lambda n, horizontal=False: False  # off the panels
 p.motion(relay.REL_HWHEEL, 1, 11.0)
-check("off the panels, the horizontal wheel does nothing", scrolls(p), [])
+check("off the panels, a notch right also deflects the joystick down (mousewheel-style)",
+      scrolls(p), ["scroll 1 -1"])
+p.motion(relay.REL_WHEEL, 1, 11.01)
+check("a vertical notch during it sets Y", scrolls(p)[-1], "scroll 1 1")
+p.motion(relay.REL_HWHEEL, -1, 11.02)
+check("the other way on X turns that axis", scrolls(p)[-1], "scroll -1 1")
 
 print("FAILED: " + ", ".join(failures) if failures else "all passed")
 sys.exit(1 if failures else 0)
